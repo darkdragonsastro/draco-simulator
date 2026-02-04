@@ -14,6 +14,13 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/darkdragonsastro/draco-simulator/internal/api/rest"
+	"github.com/darkdragonsastro/draco-simulator/internal/api/websocket"
+	"github.com/darkdragonsastro/draco-simulator/internal/catalog"
+	"github.com/darkdragonsastro/draco-simulator/internal/database"
+	"github.com/darkdragonsastro/draco-simulator/internal/eventbus"
+	"github.com/darkdragonsastro/draco-simulator/internal/game"
 )
 
 // Version information (set during build)
@@ -29,16 +36,18 @@ type Config struct {
 	DataDir         string `json:"data_dir"`
 	EnableSimulator bool   `json:"enable_simulator"`
 	EnableLiveMode  bool   `json:"enable_live_mode"`
+	Debug           bool   `json:"debug"`
 }
 
 // DefaultConfig returns sensible defaults
 func DefaultConfig() Config {
 	return Config{
 		Port:            8080,
-		Host:            "localhost",
+		Host:            "0.0.0.0",
 		DataDir:         "./data",
 		EnableSimulator: true,
 		EnableLiveMode:  false, // Requires real equipment
+		Debug:           true,
 	}
 }
 
@@ -71,58 +80,83 @@ func main() {
 }
 
 func run(ctx context.Context, config Config) error {
-	// TODO: Initialize services
-	// - EventBus
-	// - Database
-	// - Game Service
-	// - Catalog Service
-	// - Virtual Device Service (simulator mode)
-	// - Real Device Service (live mode via INDI/ASCOM)
+	// Initialize infrastructure
+	bus := eventbus.NewInMemoryBus()
+	db := database.NewInMemoryDB()
+
+	// Initialize game service
+	gameService := game.NewService(bus, db)
+	if err := gameService.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize game service: %w", err)
+	}
+	if err := gameService.Start(ctx); err != nil {
+		return fmt.Errorf("failed to start game service: %w", err)
+	}
+	defer gameService.Stop(ctx)
+
+	// Initialize catalogs
+	starCatalog := catalog.NewHipparcosCatalog()
+	dsoCatalog := catalog.NewDSOCatalog("Messier")
+
+	// Load embedded Messier catalog
+	if err := dsoCatalog.Load(ctx); err != nil {
+		log.Printf("Warning: failed to load Messier catalog: %v", err)
+	}
+
+	log.Printf("Loaded %d DSO objects", dsoCatalog.Count())
+
+	// Initialize WebSocket hub
+	wsHub := websocket.NewHub()
+	go wsHub.Run(ctx)
+
+	// Initialize REST API server
+	restConfig := rest.Config{
+		Address: fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Debug:   config.Debug,
+	}
+	server := rest.NewServer(restConfig, gameService, starCatalog, dsoCatalog)
+
+	// Create HTTP server that combines REST + WebSocket
+	mux := http.NewServeMux()
+
+	// Mount REST API
+	mux.Handle("/", server.Handler())
+
+	// Mount WebSocket endpoint
+	mux.HandleFunc("/ws", wsHub.HandleWebSocket)
+
+	httpServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Handler: mux,
+	}
 
 	log.Printf("Starting server on %s:%d", config.Host, config.Port)
 	log.Printf("Simulator mode: %v", config.EnableSimulator)
 	log.Printf("Live mode: %v", config.EnableLiveMode)
 
-	// Simple health check endpoint for now
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"healthy","version":"` + Version + `"}`))
-	})
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<!DOCTYPE html>
-<html>
-<head><title>Draco Simulator</title></head>
-<body>
-<h1>Draco Astrophotography Simulator</h1>
-<p>Welcome to Draco - learn astrophotography through simulation, then graduate to real equipment.</p>
-<h2>API Endpoints</h2>
-<ul>
-<li><a href="/health">/health</a> - Health check</li>
-<li>/api/v1/game/* - Game progression (coming soon)</li>
-<li>/api/v1/catalog/* - Star and DSO catalogs (coming soon)</li>
-<li>/api/v1/sky/* - Sky simulation (coming soon)</li>
-</ul>
-</body>
-</html>`))
-	})
-
-	server := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", config.Host, config.Port),
-		Handler: mux,
-	}
-
 	// Start server in goroutine
 	errChan := make(chan error, 1)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 		}
 	}()
 
 	log.Printf("Server is ready at http://%s:%d", config.Host, config.Port)
+	log.Println("")
+	log.Println("API Endpoints:")
+	log.Println("  GET  /api/v1/health           - Health check")
+	log.Println("  GET  /api/v1/game/progress    - Player progress")
+	log.Println("  GET  /api/v1/game/challenges  - All challenges")
+	log.Println("  GET  /api/v1/game/achievements - All achievements")
+	log.Println("  GET  /api/v1/game/store       - Equipment store")
+	log.Println("  GET  /api/v1/catalog/dso/messier - Messier catalog")
+	log.Println("  GET  /api/v1/catalog/visible  - Currently visible objects")
+	log.Println("  GET  /api/v1/sky/conditions   - Sky conditions")
+	log.Println("  GET  /api/v1/sky/twilight     - Twilight times")
+	log.Println("  GET  /api/v1/sky/moon         - Moon info")
+	log.Println("  WS   /ws                      - WebSocket connection")
+	log.Println("")
 
 	// Wait for shutdown signal or error
 	select {
@@ -130,7 +164,7 @@ func run(ctx context.Context, config Config) error {
 		log.Println("Shutting down gracefully...")
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
-		return server.Shutdown(shutdownCtx)
+		return httpServer.Shutdown(shutdownCtx)
 	case err := <-errChan:
 		return err
 	}
