@@ -4,17 +4,20 @@ import (
 	"net/http"
 
 	"github.com/darkdragonsastro/draco-simulator/internal/catalog"
+	"github.com/darkdragonsastro/draco-simulator/internal/device"
 	"github.com/darkdragonsastro/draco-simulator/internal/game"
 	"github.com/gin-gonic/gin"
 )
 
 // Server holds the HTTP server and its dependencies
 type Server struct {
-	router       *gin.Engine
-	gameService  *game.Service
-	starCatalog  catalog.StarCatalog
-	dsoCatalog   catalog.DSOCatalog
-	skyState     *SkyState
+	router         *gin.Engine
+	gameService    *game.Service
+	starCatalog    catalog.StarCatalog
+	dsoCatalog     catalog.DSOCatalog
+	skyState       *SkyState
+	profileManager *device.ProfileManager
+	deviceHandlers *DeviceHandlers
 }
 
 // SkyState holds the current sky simulation state
@@ -48,11 +51,16 @@ func NewServer(cfg Config, gameService *game.Service, starCatalog catalog.StarCa
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// Initialize profile manager with data directory
+	profileManager := device.NewProfileManager("./data")
+
 	s := &Server{
-		router:      gin.New(),
-		gameService: gameService,
-		starCatalog: starCatalog,
-		dsoCatalog:  dsoCatalog,
+		router:         gin.New(),
+		gameService:    gameService,
+		starCatalog:    starCatalog,
+		dsoCatalog:     dsoCatalog,
+		profileManager: profileManager,
+		deviceHandlers: NewDeviceHandlers(profileManager),
 		skyState: &SkyState{
 			Observer: catalog.Observer{
 				Latitude:  34.0522,  // Default: Los Angeles
@@ -145,6 +153,28 @@ func (s *Server) setupRoutes() {
 		skyGroup.GET("/twilight", s.getTwilightTimes)
 		skyGroup.GET("/moon", s.getMoonInfo)
 		skyGroup.GET("/sun", s.getSunInfo)
+	}
+
+	// Device/Profile endpoints
+	deviceGroup := api.Group("/devices")
+	{
+		// Profiles
+		deviceGroup.GET("/profiles", s.deviceHandlers.listProfiles)
+		deviceGroup.GET("/profiles/active", s.deviceHandlers.getActiveProfile)
+		deviceGroup.PUT("/profiles/active/:id", s.deviceHandlers.setActiveProfile)
+		deviceGroup.GET("/profiles/:id", s.deviceHandlers.getProfile)
+		deviceGroup.POST("/profiles", s.deviceHandlers.createProfile)
+		deviceGroup.PUT("/profiles/:id", s.deviceHandlers.updateProfile)
+		deviceGroup.DELETE("/profiles/:id", s.deviceHandlers.deleteProfile)
+
+		// Discovery
+		deviceGroup.GET("/discover", s.deviceHandlers.discoverDevices)
+		deviceGroup.POST("/discover/indi", s.deviceHandlers.discoverINDI)
+		deviceGroup.POST("/discover/alpaca", s.deviceHandlers.discoverAlpaca)
+		deviceGroup.POST("/test-connection", s.deviceHandlers.testConnection)
+
+		// Mode
+		deviceGroup.GET("/mode", s.deviceHandlers.getMode)
 	}
 }
 

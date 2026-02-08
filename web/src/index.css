@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Custom color theme for astrophotography */
+@theme {
+  --color-space-900: #0a0a0f;
+  --color-space-800: #12121a;
+  --color-space-700: #1a1a25;
+  --color-space-600: #252535;
+  --color-space-500: #35354a;
+
+  --color-star-gold: #ffd700;
+  --color-nebula-red: #ff6b6b;
+  --color-nebula-blue: #4dabf7;
+  --color-nebula-purple: #9775fa;
+
+  --color-success: #51cf66;
+  --color-warning: #fcc419;
+  --color-error: #ff6b6b;
+  --color-info: #4dabf7;
+}
+
+/* Base styles */
+body {
+  @apply bg-space-900 text-gray-100 antialiased;
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
