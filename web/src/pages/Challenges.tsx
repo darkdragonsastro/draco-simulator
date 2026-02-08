@@ -1,7 +1,10 @@
 // Challenges page
 
 import { useEffect } from 'react';
+import { BookOpen, CalendarDays, CalendarRange, Star, Target, Trophy } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore';
+import { PanelChrome } from '../components/ui/PanelChrome';
+import type { LucideIcon } from 'lucide-react';
 
 export function Challenges() {
   const { challenges, availableChallenges, fetchChallenges, startChallenge } = useGameStore();
@@ -12,126 +15,123 @@ export function Challenges() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'beginner':
-        return 'bg-success/20 text-success';
-      case 'intermediate':
-        return 'bg-warning/20 text-warning';
-      case 'advanced':
-        return 'bg-nebula-red/20 text-nebula-red';
-      case 'expert':
-        return 'bg-nebula-purple/20 text-nebula-purple';
-      default:
-        return 'bg-gray-600 text-gray-400';
+      case 'beginner': return 'bg-success/20 text-success';
+      case 'intermediate': return 'bg-warning/20 text-warning';
+      case 'advanced': return 'bg-nebula-red/20 text-nebula-red';
+      case 'expert': return 'bg-nebula-purple/20 text-nebula-purple';
+      default: return 'bg-nina-border text-nina-text-dim';
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: string): LucideIcon => {
     switch (type.toLowerCase()) {
-      case 'tutorial':
-        return '📚';
-      case 'daily':
-        return '📅';
-      case 'weekly':
-        return '📆';
-      case 'special':
-        return '⭐';
-      default:
-        return '🎯';
+      case 'tutorial': return BookOpen;
+      case 'daily': return CalendarDays;
+      case 'weekly': return CalendarRange;
+      case 'special': return Star;
+      default: return Target;
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">Challenges</h1>
-      <p className="text-gray-400 mb-6">Complete challenges to earn XP and credits</p>
+    <div className="max-w-6xl mx-auto space-y-4">
+      <div>
+        <h1 className="text-xl font-bold text-nina-text-bright mb-0.5">Challenges</h1>
+        <p className="text-xs text-nina-text-dim">Complete challenges to earn XP and credits</p>
+      </div>
 
       {/* Available Challenges */}
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <span className="text-success">●</span> Available Now
+      <section>
+        <h2 className="text-sm font-medium text-nina-text-bright mb-3 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-success" /> Available Now
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {availableChallenges.map((challenge) => (
-            <div key={challenge.id} className="bg-space-800 rounded-xl p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{getTypeIcon(challenge.type)}</span>
-                  <div>
-                    <h3 className="font-semibold text-white">{challenge.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded ${getDifficultyColor(challenge.difficulty)}`}>
-                      {challenge.difficulty}
-                    </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {availableChallenges.map((challenge) => {
+            const TypeIcon = getTypeIcon(challenge.type);
+            return (
+              <div key={challenge.id} className="bg-nina-surface rounded border border-nina-border p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <TypeIcon size={20} className="text-nina-active shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-nina-text-bright text-sm">{challenge.name}</h3>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${getDifficultyColor(challenge.difficulty)}`}>
+                        {challenge.difficulty}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <p className="text-gray-400 text-sm mb-4">{challenge.description}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-nebula-blue">+{challenge.xp_reward} XP</span>
-                  <span className="text-sm text-star-gold">+{challenge.credits} Credits</span>
+                <p className="text-nina-text-dim text-xs mb-3">{challenge.description}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-nina-active">+{challenge.xp_reward} XP</span>
+                    <span className="text-xs text-star-gold">+{challenge.credits} Credits</span>
+                  </div>
+                  <button
+                    onClick={() => startChallenge(challenge.id)}
+                    className="px-3 py-1.5 bg-nina-primary rounded text-xs font-medium text-nina-text-bright hover:bg-nina-active transition"
+                  >
+                    Start
+                  </button>
                 </div>
-                <button
-                  onClick={() => startChallenge(challenge.id)}
-                  className="px-4 py-2 bg-nebula-purple rounded-lg text-sm font-medium hover:bg-opacity-80 transition"
-                >
-                  Start
-                </button>
+                {challenge.time_limit > 0 && (
+                  <div className="mt-2 text-[10px] text-nina-text-dim">
+                    Time limit: {Math.floor(challenge.time_limit / 60)} minutes
+                  </div>
+                )}
               </div>
-              {challenge.time_limit > 0 && (
-                <div className="mt-3 text-xs text-gray-500">
-                  Time limit: {Math.floor(challenge.time_limit / 60)} minutes
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
         {availableChallenges.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-6 text-nina-text-dim text-sm">
             No challenges available. Check back later or level up to unlock more!
           </div>
         )}
       </section>
 
       {/* All Challenges */}
-      <section>
-        <h2 className="text-xl font-semibold text-white mb-4">All Challenges</h2>
-        <div className="bg-space-800 rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-space-700">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Challenge</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Type</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Difficulty</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Tier</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-gray-400">Rewards</th>
+      <PanelChrome title="All Challenges" icon={<Trophy size={12} />}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-nina-border">
+                <th className="text-left py-2 px-3 text-nina-text-dim font-medium">Challenge</th>
+                <th className="text-left py-2 px-3 text-nina-text-dim font-medium">Type</th>
+                <th className="text-left py-2 px-3 text-nina-text-dim font-medium">Difficulty</th>
+                <th className="text-left py-2 px-3 text-nina-text-dim font-medium">Tier</th>
+                <th className="text-right py-2 px-3 text-nina-text-dim font-medium">Rewards</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-space-700">
-              {challenges.map((challenge) => (
-                <tr key={challenge.id} className="hover:bg-space-700/50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span>{getTypeIcon(challenge.type)}</span>
-                      <span className="text-white">{challenge.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-400 capitalize">{challenge.type}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded ${getDifficultyColor(challenge.difficulty)}`}>
-                      {challenge.difficulty}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-400">{challenge.tier_required}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="text-sm text-nebula-blue mr-3">+{challenge.xp_reward} XP</span>
-                    <span className="text-sm text-star-gold">+{challenge.credits}</span>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-nina-border">
+              {challenges.map((challenge) => {
+                const TypeIcon = getTypeIcon(challenge.type);
+                return (
+                  <tr key={challenge.id} className="hover:bg-nina-elevated/50">
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <TypeIcon size={12} className="text-nina-text-dim" />
+                        <span className="text-nina-text">{challenge.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-nina-text-dim capitalize">{challenge.type}</td>
+                    <td className="py-2 px-3">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${getDifficultyColor(challenge.difficulty)}`}>
+                        {challenge.difficulty}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-nina-text-dim">{challenge.tier_required}</td>
+                    <td className="py-2 px-3 text-right">
+                      <span className="text-nina-active mr-2">+{challenge.xp_reward} XP</span>
+                      <span className="text-star-gold">+{challenge.credits}</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </section>
+      </PanelChrome>
     </div>
   );
 }

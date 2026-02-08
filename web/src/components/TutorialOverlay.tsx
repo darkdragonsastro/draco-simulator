@@ -6,7 +6,7 @@ export interface TutorialStep {
   id: string;
   title: string;
   content: string;
-  target?: string; // CSS selector for highlighting
+  target?: string;
   position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   action?: 'click' | 'wait' | 'input';
   actionTarget?: string;
@@ -122,7 +122,7 @@ export function TutorialOverlay({ tutorial, onComplete, onSkip }: TutorialOverla
       <div className="absolute inset-0 bg-black/70">
         {highlightRect && (
           <div
-            className="absolute bg-transparent border-4 border-nebula-blue rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] animate-pulse"
+            className="absolute bg-transparent border-4 border-nina-active rounded shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] animate-pulse"
             style={{
               top: highlightRect.top - 8,
               left: highlightRect.left - 8,
@@ -135,48 +135,48 @@ export function TutorialOverlay({ tutorial, onComplete, onSkip }: TutorialOverla
 
       {/* Tooltip */}
       <div
-        className="absolute w-96 bg-space-700 rounded-xl shadow-2xl border border-space-500 overflow-hidden"
+        className="absolute w-96 bg-nina-elevated rounded-lg shadow-2xl border border-nina-border overflow-hidden"
         style={getTooltipPosition()}
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-space-800 border-b border-space-600">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-nebula-blue font-medium">
+        <div className="px-5 py-3 bg-nina-surface border-b border-nina-border">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-nina-active font-medium">
               {tutorial.name} - Step {currentStep + 1} of {tutorial.steps.length}
             </span>
             <button
               onClick={onSkip}
-              className="text-xs text-gray-500 hover:text-gray-300 transition"
+              className="text-[10px] text-nina-text-dim hover:text-nina-text transition"
             >
               Skip Tutorial
             </button>
           </div>
-          <h3 className="text-lg font-semibold text-white">{step.title}</h3>
+          <h3 className="text-sm font-medium text-nina-text-bright">{step.title}</h3>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4">
-          <p className="text-gray-300 leading-relaxed">{step.content}</p>
+        <div className="px-5 py-3">
+          <p className="text-nina-text text-sm leading-relaxed">{step.content}</p>
 
           {step.action && (
-            <div className="mt-4 p-3 bg-space-800 rounded-lg">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="mt-3 p-2 bg-nina-surface rounded">
+              <div className="flex items-center gap-2 text-xs">
                 {step.action === 'click' && (
                   <>
-                    <span className="text-nebula-blue">👆</span>
-                    <span className="text-gray-400">Click the highlighted element to continue</span>
+                    <span className="text-nina-active">Click</span>
+                    <span className="text-nina-text-dim">the highlighted element to continue</span>
                   </>
                 )}
                 {step.action === 'input' && (
                   <>
-                    <span className="text-nebula-blue">⌨️</span>
-                    <span className="text-gray-400">Enter a value in the highlighted field</span>
+                    <span className="text-nina-active">Type</span>
+                    <span className="text-nina-text-dim">a value in the highlighted field</span>
                   </>
                 )}
                 {step.action === 'wait' && (
                   <>
-                    <span className="text-nebula-blue">⏳</span>
-                    <span className="text-gray-400">Wait for the action to complete</span>
+                    <span className="text-nina-active">Wait</span>
+                    <span className="text-nina-text-dim">for the action to complete</span>
                   </>
                 )}
               </div>
@@ -185,31 +185,31 @@ export function TutorialOverlay({ tutorial, onComplete, onSkip }: TutorialOverla
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 bg-space-800">
+        <div className="h-0.5 bg-nina-surface">
           <div
-            className="h-full bg-gradient-to-r from-nebula-blue to-nebula-purple transition-all"
+            className="h-full bg-nina-active transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-space-800 flex items-center justify-between">
+        <div className="px-5 py-3 bg-nina-surface flex items-center justify-between">
           <button
             onClick={handlePrev}
             disabled={currentStep === 0}
-            className={`px-4 py-2 rounded-lg text-sm transition ${
+            className={`px-3 py-1.5 rounded text-xs transition ${
               currentStep === 0
-                ? 'text-gray-600 cursor-not-allowed'
-                : 'text-gray-300 hover:bg-space-600'
+                ? 'text-nina-border cursor-not-allowed'
+                : 'text-nina-text-dim hover:bg-nina-elevated'
             }`}
           >
-            ← Previous
+            Previous
           </button>
           <button
             onClick={handleNext}
-            className="px-6 py-2 bg-nebula-blue rounded-lg text-sm font-medium hover:bg-opacity-80 transition"
+            className="px-4 py-1.5 bg-nina-primary rounded text-xs font-medium text-nina-text-bright hover:bg-nina-active transition"
           >
-            {isLastStep ? 'Complete!' : 'Next →'}
+            {isLastStep ? 'Complete!' : 'Next'}
           </button>
         </div>
       </div>

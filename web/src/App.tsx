@@ -3,7 +3,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { Layout } from './components/Layout';
+import { AppLayout } from './components/layout/AppLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Imaging } from './pages/Imaging';
 import { Challenges } from './pages/Challenges';
@@ -11,8 +11,11 @@ import { Store } from './pages/Store';
 import { Progress } from './pages/Progress';
 import { Settings } from './pages/Settings';
 import { Equipment } from './pages/Equipment';
+import { SkyView } from './pages/SkyView';
 import { wsClient, WSEvents } from './api/websocket';
 import { useGameStore } from './stores/gameStore';
+import { useMountStore } from './stores/mountStore';
+import type { MountStatus } from './api/client';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +28,7 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { handleAchievementUnlocked, handleLevelUp, handleCurrencyEarned } = useGameStore();
+  const updateMountStatus = useMountStore((s) => s.updateStatus);
 
   // Connect WebSocket and set up event handlers
   useEffect(() => {
@@ -42,17 +46,22 @@ function AppContent() {
       handleCurrencyEarned((msg.data as any).amount);
     });
 
+    const unsubMount = wsClient.subscribe(WSEvents.MOUNT_POSITION, (msg) => {
+      updateMountStatus(msg.data as MountStatus);
+    });
+
     return () => {
       unsubAchievement();
       unsubLevelUp();
       unsubCurrency();
+      unsubMount();
       wsClient.disconnect();
     };
-  }, [handleAchievementUnlocked, handleLevelUp, handleCurrencyEarned]);
+  }, [handleAchievementUnlocked, handleLevelUp, handleCurrencyEarned, updateMountStatus]);
 
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route path="/" element={<AppLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="imaging" element={<Imaging />} />
         <Route path="challenges" element={<Challenges />} />
@@ -60,6 +69,7 @@ function AppContent() {
         <Route path="progress" element={<Progress />} />
         <Route path="settings" element={<Settings />} />
         <Route path="equipment" element={<Equipment />} />
+        <Route path="sky" element={<SkyView />} />
       </Route>
     </Routes>
   );

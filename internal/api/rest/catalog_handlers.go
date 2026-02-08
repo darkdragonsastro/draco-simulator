@@ -183,21 +183,17 @@ func (s *Server) getMessierCatalog(c *gin.Context) {
 		return
 	}
 
-	// Get all objects and filter for Messier objects
-	objects, err := s.dsoCatalog.ByType(c.Request.Context(), "")
+	// Get all objects via full-sky cone search
+	query := catalog.ConeSearchQuery{
+		RA:         180,
+		Dec:        0,
+		Radius:     180,
+		MaxResults: 200,
+	}
+	objects, err := s.dsoCatalog.ConeSearch(c.Request.Context(), query)
 	if err != nil {
-		// Fall back to cone search of entire sky
-		query := catalog.ConeSearchQuery{
-			RA:         180,
-			Dec:        0,
-			Radius:     180,
-			MaxResults: 200,
-		}
-		objects, err = s.dsoCatalog.ConeSearch(c.Request.Context(), query)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	// Filter to only Messier objects (ID starts with "M")
@@ -289,6 +285,60 @@ type TargetSuggestion struct {
 	Reason      string                 `json:"reason"`
 	BestTime    time.Time              `json:"best_time"`
 	WindowHours float64                `json:"window_hours"`
+}
+
+func (s *Server) getBrightStars(c *gin.Context) {
+	if s.starCatalog == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "star catalog not available"})
+		return
+	}
+
+	maxMagStr := c.DefaultQuery("max_mag", "6.5")
+	maxMag, _ := strconv.ParseFloat(maxMagStr, 64)
+
+	// GetBrightStars requires a concrete *HipparcosCatalog
+	hipCat, ok := s.starCatalog.(*catalog.HipparcosCatalog)
+	if !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "bright star lookup not available"})
+		return
+	}
+
+	stars, err := hipCat.GetBrightStars(c.Request.Context(), maxMag)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return compact format for planetarium rendering
+	type BrightStar struct {
+		HIP  int     `json:"hip"`
+		RA   float64 `json:"ra"`
+		Dec  float64 `json:"dec"`
+		VMag float64 `json:"vmag"`
+		BV   float64 `json:"bv"`
+		Name string  `json:"name,omitempty"`
+	}
+
+	result := make([]BrightStar, len(stars))
+	for i, star := range stars {
+		result[i] = BrightStar{
+			HIP:  star.HIP,
+			RA:   star.RA,
+			Dec:  star.Dec,
+			VMag: star.VMag,
+			BV:   star.BV,
+			Name: star.Name,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"count": len(result),
+		"stars": result,
+	})
+}
+
+func (s *Server) getConstellations(c *gin.Context) {
+	c.JSON(http.StatusOK, catalog.AllConstellations)
 }
 
 func (s *Server) suggestTargets(c *gin.Context) {

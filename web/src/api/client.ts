@@ -90,6 +90,9 @@ export const catalogApi = {
     return api.get<StarSearchResult>(`/catalog/stars?${query}`);
   },
   getStar: (id: number) => api.get<Star>(`/catalog/stars/${id}`),
+  getBrightStars: (maxMag: number = 6.5) =>
+    api.get<BrightStarResult>(`/catalog/stars/bright?max_mag=${maxMag}`),
+  getConstellations: () => api.get<ConstellationInfo[]>('/catalog/constellations'),
   searchDSO: (params: DSOSearchParams) => {
     const query = new URLSearchParams();
     if (params.name) query.set('name', params.name);
@@ -127,6 +130,44 @@ export const skyApi = {
   getTwilight: () => api.get<TwilightInfo>('/sky/twilight'),
   getMoon: () => api.get<MoonInfo>('/sky/moon'),
   getSun: () => api.get<SunInfo>('/sky/sun'),
+  getPlanets: () => api.get<PlanetsResult>('/sky/planets'),
+};
+
+// Mount API
+export type TrackingMode = 'off' | 'sidereal' | 'lunar' | 'solar';
+export type JogDirection = 'north' | 'south' | 'east' | 'west';
+
+export interface MountStatus {
+  ra: number;
+  dec: number;
+  alt: number;
+  az: number;
+  target_ra: number;
+  target_dec: number;
+  is_slewing: boolean;
+  is_tracking: boolean;
+  is_parked: boolean;
+  tracking_mode: TrackingMode;
+  pier_side: string;
+  slew_rate: number;
+  hour_angle: number;
+  lst: number;
+  ra_axis_deg: number;
+  dec_axis_deg: number;
+  connected: boolean;
+}
+
+export const mountApi = {
+  getStatus: () => api.get<MountStatus>('/mount/status'),
+  slewTo: (ra: number, dec: number) => api.post<void>('/mount/slew', { ra, dec }),
+  stop: () => api.post<void>('/mount/stop'),
+  setTracking: (mode: TrackingMode) => api.post<void>('/mount/track', { mode }),
+  jog: (direction: JogDirection, rate: number) =>
+    api.post<void>('/mount/jog', { direction, rate }),
+  park: () => api.post<void>('/mount/park'),
+  unpark: () => api.post<void>('/mount/unpark'),
+  connect: () => api.post<void>('/mount/connect'),
+  disconnect: () => api.post<void>('/mount/disconnect'),
 };
 
 // Device API
@@ -310,6 +351,8 @@ export interface DeepSkyObject {
   size_minor: number;
   pa: number;
   description: string;
+  image_url?: string;
+  image_credit?: string;
 }
 
 export interface DSOSearchResult {
@@ -485,4 +528,47 @@ export interface ConnectionTestResult {
 export interface ModeInfo {
   mode: 'simulation' | 'live' | 'hybrid';
   profile: EquipmentProfile | null;
+}
+
+// Bright star from catalog (compact format for planetarium)
+export interface BrightStar {
+  hip: number;
+  ra: number;
+  dec: number;
+  vmag: number;
+  bv: number;
+  name?: string;
+}
+
+export interface BrightStarResult {
+  count: number;
+  stars: BrightStar[];
+}
+
+// Constellation data
+export interface ConstellationInfo {
+  abbreviation: string;
+  name: string;
+  lines: number[][];
+  label_ra: number;
+  label_dec: number;
+}
+
+// Planet position data
+export interface PlanetPosition {
+  body: string;
+  ra: number;
+  dec: number;
+  altitude: number;
+  azimuth: number;
+  magnitude: number;
+  is_visible: boolean;
+  angular_diameter?: number;
+  phase?: number;
+  illumination?: number;
+}
+
+export interface PlanetsResult {
+  planets: PlanetPosition[];
+  time: string;
 }

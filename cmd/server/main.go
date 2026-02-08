@@ -21,6 +21,7 @@ import (
 	"github.com/darkdragonsastro/draco-simulator/internal/database"
 	"github.com/darkdragonsastro/draco-simulator/internal/eventbus"
 	"github.com/darkdragonsastro/draco-simulator/internal/game"
+	"github.com/darkdragonsastro/draco-simulator/internal/mount"
 )
 
 // Version information (set during build)
@@ -98,23 +99,33 @@ func run(ctx context.Context, config Config) error {
 	starCatalog := catalog.NewHipparcosCatalog()
 	dsoCatalog := catalog.NewDSOCatalog("Messier")
 
-	// Load embedded Messier catalog
-	if err := dsoCatalog.Load(ctx); err != nil {
-		log.Printf("Warning: failed to load Messier catalog: %v", err)
+	// Load star catalog (embedded binary data)
+	if err := starCatalog.Load(ctx); err != nil {
+		log.Printf("Warning: failed to load star catalog: %v (run 'go run cmd/catalog-gen/main.go' to generate)", err)
+	} else {
+		log.Printf("Loaded %d stars", starCatalog.Count())
+		catalog.InitializeStarNames(starCatalog)
 	}
 
+	// Load Messier catalog from built-in data
+	catalog.InitializeMessierCatalog(dsoCatalog)
 	log.Printf("Loaded %d DSO objects", dsoCatalog.Count())
 
 	// Initialize WebSocket hub
 	wsHub := websocket.NewHub()
 	go wsHub.Run(ctx)
 
+	// Initialize mount simulator
+	mountSim := mount.NewSimulator(mount.DefaultConfig(), func(status mount.MountStatus) {
+		wsHub.Broadcast(websocket.EventMountPosition, status)
+	})
+
 	// Initialize REST API server
 	restConfig := rest.Config{
 		Address: fmt.Sprintf("%s:%d", config.Host, config.Port),
 		Debug:   config.Debug,
 	}
-	server := rest.NewServer(restConfig, gameService, starCatalog, dsoCatalog)
+	server := rest.NewServer(restConfig, gameService, starCatalog, dsoCatalog, mountSim)
 
 	// Create HTTP server that combines REST + WebSocket
 	mux := http.NewServeMux()
@@ -150,11 +161,16 @@ func run(ctx context.Context, config Config) error {
 	log.Println("  GET  /api/v1/game/challenges  - All challenges")
 	log.Println("  GET  /api/v1/game/achievements - All achievements")
 	log.Println("  GET  /api/v1/game/store       - Equipment store")
+	log.Println("  GET  /api/v1/catalog/stars/bright - Bright stars for planetarium")
+	log.Println("  GET  /api/v1/catalog/constellations - Constellation data")
 	log.Println("  GET  /api/v1/catalog/dso/messier - Messier catalog")
 	log.Println("  GET  /api/v1/catalog/visible  - Currently visible objects")
 	log.Println("  GET  /api/v1/sky/conditions   - Sky conditions")
+	log.Println("  GET  /api/v1/sky/planets      - Planet positions")
 	log.Println("  GET  /api/v1/sky/twilight     - Twilight times")
 	log.Println("  GET  /api/v1/sky/moon         - Moon info")
+	log.Println("  GET  /api/v1/mount/status     - Mount status")
+	log.Println("  POST /api/v1/mount/slew       - Slew to target")
 	log.Println("  WS   /ws                      - WebSocket connection")
 	log.Println("")
 

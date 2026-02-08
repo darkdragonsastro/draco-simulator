@@ -1,7 +1,10 @@
 // Progress / Achievements page
 
 import { useEffect } from 'react';
+import { Trophy, TrendingUp, Coins, Camera, Clock, Award } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore';
+import { PanelChrome } from '../components/ui/PanelChrome';
+import { ProgressRing } from '../components/ui/ProgressRing';
 
 export function Progress() {
   const { progress, achievements, unlockedAchievements, fetchProgress, fetchAchievements } =
@@ -14,153 +17,123 @@ export function Progress() {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
-      case 'common':
-        return 'from-gray-400 to-gray-600';
-      case 'rare':
-        return 'from-nebula-blue to-blue-600';
-      case 'epic':
-        return 'from-nebula-purple to-purple-600';
-      case 'legendary':
-        return 'from-star-gold to-yellow-600';
-      default:
-        return 'from-gray-400 to-gray-600';
+      case 'common': return 'from-gray-400 to-gray-600';
+      case 'rare': return 'from-nebula-blue to-blue-600';
+      case 'epic': return 'from-nebula-purple to-purple-600';
+      case 'legendary': return 'from-star-gold to-yellow-600';
+      default: return 'from-gray-400 to-gray-600';
     }
   };
 
   const getRarityBorder = (rarity: string) => {
     switch (rarity.toLowerCase()) {
-      case 'common':
-        return 'border-gray-500';
-      case 'rare':
-        return 'border-nebula-blue';
-      case 'epic':
-        return 'border-nebula-purple';
-      case 'legendary':
-        return 'border-star-gold';
-      default:
-        return 'border-gray-600';
+      case 'common': return 'border-nina-border';
+      case 'rare': return 'border-nebula-blue';
+      case 'epic': return 'border-nebula-purple';
+      case 'legendary': return 'border-star-gold';
+      default: return 'border-nina-border';
     }
   };
 
   const isUnlocked = (id: string) => unlockedAchievements.some((a) => a.id === id);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Progress & Achievements</h1>
+    <div className="max-w-6xl mx-auto space-y-4">
+      <h1 className="text-xl font-bold text-nina-text-bright">Progress & Achievements</h1>
 
       {/* Progress Overview */}
       {progress && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Level Progress */}
-          <div className="bg-space-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Level Progress</h2>
-            <div className="flex items-center gap-6 mb-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-nebula-blue to-nebula-purple flex items-center justify-center">
-                <span className="text-4xl font-bold text-white">{progress.level}</span>
-              </div>
+          <PanelChrome title="Level Progress" icon={<TrendingUp size={12} />}>
+            <div className="flex items-center gap-5 mb-4">
+              <ProgressRing value={progress.xp} max={progress.xp_to_next_level} size={72} strokeWidth={4}>
+                <span className="text-2xl font-bold text-nina-text-bright">{progress.level}</span>
+              </ProgressRing>
               <div className="flex-1">
-                <div className="text-lg font-medium text-white mb-1">{progress.tier} Tier</div>
-                <div className="text-sm text-gray-400 mb-2">
+                <div className="text-sm font-medium text-nina-text-bright mb-1">{progress.tier} Tier</div>
+                <div className="text-xs text-nina-text-dim mb-1.5">
                   {progress.xp.toLocaleString()} / {progress.xp_to_next_level.toLocaleString()} XP
                 </div>
-                <div className="h-3 bg-space-600 rounded-full overflow-hidden">
+                <div className="h-2 bg-nina-border rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-nebula-blue to-nebula-purple transition-all"
+                    className="h-full bg-nina-active transition-all"
                     style={{ width: `${(progress.xp / progress.xp_to_next_level) * 100}%` }}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </PanelChrome>
 
           {/* Stats */}
-          <div className="bg-space-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Statistics</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-space-700 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-star-gold">
-                  {progress.credits.toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-400">Credits</div>
-              </div>
-              <div className="bg-space-700 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-nebula-blue">{progress.total_images}</div>
-                <div className="text-sm text-gray-400">Images</div>
-              </div>
-              <div className="bg-space-700 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-nebula-purple">
-                  {Math.round(progress.total_exposure_time / 60)}
-                </div>
-                <div className="text-sm text-gray-400">Minutes</div>
-              </div>
-              <div className="bg-space-700 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-success">
-                  {progress.unlocked_achievements.length}
-                </div>
-                <div className="text-sm text-gray-400">Achievements</div>
-              </div>
+          <PanelChrome title="Statistics" icon={<Award size={12} />}>
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard icon={Coins} label="Credits" value={progress.credits.toLocaleString()} color="text-star-gold" />
+              <StatCard icon={Camera} label="Images" value={String(progress.total_images)} color="text-nina-active" />
+              <StatCard icon={Clock} label="Minutes" value={String(Math.round(progress.total_exposure_time / 60))} color="text-nebula-purple" />
+              <StatCard icon={Trophy} label="Achievements" value={String(progress.unlocked_achievements.length)} color="text-success" />
             </div>
-          </div>
+          </PanelChrome>
         </div>
       )}
 
-      {/* Achievement Progress */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-white">Achievements</h2>
-          <span className="text-sm text-gray-400">
+      {/* Achievement Progress Bar */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-medium text-nina-text-bright">Achievements</h2>
+          <span className="text-xs text-nina-text-dim">
             {unlockedAchievements.length} / {achievements.length} unlocked (
             {Math.round((progress?.achievement_progress ?? 0) * 100)}%)
           </span>
         </div>
-        <div className="h-2 bg-space-700 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-nina-border rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-star-gold to-yellow-600 transition-all"
+            className="h-full bg-star-gold transition-all"
             style={{ width: `${(progress?.achievement_progress ?? 0) * 100}%` }}
           />
         </div>
       </div>
 
       {/* Achievements Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {achievements.map((achievement) => {
           const unlocked = isUnlocked(achievement.id);
 
           return (
             <div
               key={achievement.id}
-              className={`bg-space-800 rounded-xl p-5 border-2 ${getRarityBorder(achievement.rarity)} ${
-                !unlocked ? 'opacity-50 grayscale' : ''
+              className={`bg-nina-surface rounded p-4 border-2 ${getRarityBorder(achievement.rarity)} ${
+                !unlocked ? 'opacity-40 grayscale' : ''
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 <div
-                  className={`w-14 h-14 rounded-full bg-gradient-to-br ${getRarityColor(
+                  className={`w-10 h-10 rounded-full bg-gradient-to-br ${getRarityColor(
                     achievement.rarity
-                  )} flex items-center justify-center text-2xl`}
+                  )} flex items-center justify-center text-lg shrink-0`}
                 >
                   {achievement.hidden && !unlocked ? '?' : achievement.icon || '🏆'}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-nina-text-bright text-sm">
                     {achievement.hidden && !unlocked ? '???' : achievement.name}
                   </h3>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-xs text-nina-text-dim mt-0.5">
                     {achievement.hidden && !unlocked
                       ? 'Hidden achievement'
                       : achievement.description}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-1.5">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded capitalize bg-gradient-to-r ${getRarityColor(
+                      className={`text-[10px] px-1.5 py-0.5 rounded capitalize bg-gradient-to-r ${getRarityColor(
                         achievement.rarity
                       )} text-white`}
                     >
                       {achievement.rarity}
                     </span>
-                    <span className="text-xs text-nebula-blue">+{achievement.xp_reward} XP</span>
+                    <span className="text-[10px] text-nina-active">+{achievement.xp_reward} XP</span>
                     {unlocked && (
-                      <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded ml-auto">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-success/20 text-success rounded ml-auto">
                         Unlocked
                       </span>
                     )}
@@ -171,6 +144,26 @@ export function Progress() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <div className="bg-nina-elevated rounded p-3 text-center">
+      <Icon size={14} className={`${color} mx-auto mb-1`} />
+      <div className={`text-xl font-bold ${color}`}>{value}</div>
+      <div className="text-[10px] text-nina-text-dim">{label}</div>
     </div>
   );
 }

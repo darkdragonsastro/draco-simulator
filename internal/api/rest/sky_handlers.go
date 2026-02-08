@@ -260,6 +260,58 @@ type SunInfoResponse struct {
 	IsUp     bool    `json:"is_up"`
 }
 
+// PlanetInfoResponse contains planet position and visibility
+type PlanetInfoResponse struct {
+	Body            string  `json:"body"`
+	RA              float64 `json:"ra"`
+	Dec             float64 `json:"dec"`
+	Altitude        float64 `json:"altitude"`
+	Azimuth         float64 `json:"azimuth"`
+	Magnitude       float64 `json:"magnitude"`
+	IsVisible       bool    `json:"is_visible"`
+	AngularDiameter float64 `json:"angular_diameter,omitempty"`
+	Phase           float64 `json:"phase,omitempty"`
+	Illumination    float64 `json:"illumination,omitempty"`
+}
+
+func (s *Server) getPlanets(c *gin.Context) {
+	now := time.Now().UTC()
+	if !s.skyState.UseRealTime {
+		now = now.Add(time.Duration(s.skyState.TimeOffset * float64(time.Hour)))
+	}
+
+	ephemeris := catalog.NewEphemeris(&s.skyState.Observer)
+
+	bodies := []catalog.SolarSystemBody{
+		catalog.BodyMercury, catalog.BodyVenus, catalog.BodyMars,
+		catalog.BodyJupiter, catalog.BodySaturn, catalog.BodyUranus, catalog.BodyNeptune,
+	}
+
+	var planets []PlanetInfoResponse
+	for _, body := range bodies {
+		pos := ephemeris.GetPlanetPosition(body, now)
+		vis := catalog.CalculateVisibility(pos.RA, pos.Dec, &s.skyState.Observer, now, 0)
+
+		planets = append(planets, PlanetInfoResponse{
+			Body:            string(pos.Body),
+			RA:              pos.RA,
+			Dec:             pos.Dec,
+			Altitude:        vis.Coords.Altitude,
+			Azimuth:         vis.Coords.Azimuth,
+			Magnitude:       pos.Magnitude,
+			IsVisible:       vis.Coords.Altitude > 0,
+			AngularDiameter: pos.AngularDiameter,
+			Phase:           pos.Phase,
+			Illumination:    pos.Illumination,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"planets": planets,
+		"time":    now,
+	})
+}
+
 func (s *Server) getSunInfo(c *gin.Context) {
 	now := time.Now().UTC()
 	if !s.skyState.UseRealTime {

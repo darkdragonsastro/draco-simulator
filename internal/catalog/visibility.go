@@ -48,7 +48,7 @@ type VisibilityInfo struct {
 	IsVisible bool `json:"is_visible"`
 
 	// Current horizontal coordinates
-	Coords HorizontalCoordinates `json:"coordinates"`
+	Coords HorizontalCoordinates `json:"coords"`
 
 	// HourAngle in hours (-12 to +12)
 	HourAngle float64 `json:"hour_angle"`

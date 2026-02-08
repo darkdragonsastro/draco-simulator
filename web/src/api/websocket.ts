@@ -166,4 +166,10 @@ export const WSEvents = {
   GUIDE_STARTED: 'guide.started',
   GUIDE_STOPPED: 'guide.stopped',
   GUIDE_CORRECTION: 'guide.correction',
+
+  // Mount events
+  MOUNT_POSITION: 'mount.position',
+  MOUNT_SLEW_STARTED: 'mount.slew.started',
+  MOUNT_SLEW_COMPLETED: 'mount.slew.completed',
+  MOUNT_TRACKING_CHANGED: 'mount.tracking.changed',
 } as const;

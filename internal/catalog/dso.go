@@ -601,6 +601,17 @@ func (d *DSOCatalogImpl) Add(obj DeepSkyObject) {
 	}
 }
 
+// FinalizeLoad builds indexes and marks the catalog as loaded.
+// Call this after using Add() to populate the catalog manually.
+func (d *DSOCatalogImpl) FinalizeLoad() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.buildIndex()
+	d.buildTypeIndex()
+	d.loaded = true
+}
+
 // ExportJSON exports the catalog to JSON
 func (d *DSOCatalogImpl) ExportJSON(w io.Writer, compress bool) error {
 	d.mu.RLock()

@@ -6,6 +6,7 @@ import (
 	"github.com/darkdragonsastro/draco-simulator/internal/catalog"
 	"github.com/darkdragonsastro/draco-simulator/internal/device"
 	"github.com/darkdragonsastro/draco-simulator/internal/game"
+	"github.com/darkdragonsastro/draco-simulator/internal/mount"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,7 @@ type Server struct {
 	skyState       *SkyState
 	profileManager *device.ProfileManager
 	deviceHandlers *DeviceHandlers
+	mountHandlers  *MountHandlers
 }
 
 // SkyState holds the current sky simulation state
@@ -46,7 +48,7 @@ type Config struct {
 }
 
 // NewServer creates a new HTTP server
-func NewServer(cfg Config, gameService *game.Service, starCatalog catalog.StarCatalog, dsoCatalog catalog.DSOCatalog) *Server {
+func NewServer(cfg Config, gameService *game.Service, starCatalog catalog.StarCatalog, dsoCatalog catalog.DSOCatalog, mountSim *mount.Simulator) *Server {
 	if !cfg.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -61,6 +63,7 @@ func NewServer(cfg Config, gameService *game.Service, starCatalog catalog.StarCa
 		dsoCatalog:     dsoCatalog,
 		profileManager: profileManager,
 		deviceHandlers: NewDeviceHandlers(profileManager),
+		mountHandlers:  NewMountHandlers(mountSim),
 		skyState: &SkyState{
 			Observer: catalog.Observer{
 				Latitude:  34.0522,  // Default: Los Angeles
@@ -128,7 +131,9 @@ func (s *Server) setupRoutes() {
 	catalogGroup := api.Group("/catalog")
 	{
 		catalogGroup.GET("/stars", s.searchStars)
+		catalogGroup.GET("/stars/bright", s.getBrightStars)
 		catalogGroup.GET("/stars/:id", s.getStar)
+		catalogGroup.GET("/constellations", s.getConstellations)
 
 		catalogGroup.GET("/dso", s.searchDSO)
 		catalogGroup.GET("/dso/:id", s.getDSO)
@@ -153,6 +158,21 @@ func (s *Server) setupRoutes() {
 		skyGroup.GET("/twilight", s.getTwilightTimes)
 		skyGroup.GET("/moon", s.getMoonInfo)
 		skyGroup.GET("/sun", s.getSunInfo)
+		skyGroup.GET("/planets", s.getPlanets)
+	}
+
+	// Mount endpoints
+	mountGroup := api.Group("/mount")
+	{
+		mountGroup.GET("/status", s.mountHandlers.getStatus)
+		mountGroup.POST("/slew", s.mountHandlers.slewTo)
+		mountGroup.POST("/stop", s.mountHandlers.stopSlew)
+		mountGroup.POST("/track", s.mountHandlers.setTracking)
+		mountGroup.POST("/jog", s.mountHandlers.jog)
+		mountGroup.POST("/park", s.mountHandlers.park)
+		mountGroup.POST("/unpark", s.mountHandlers.unpark)
+		mountGroup.POST("/connect", s.mountHandlers.connect)
+		mountGroup.POST("/disconnect", s.mountHandlers.disconnect)
 	}
 
 	// Device/Profile endpoints

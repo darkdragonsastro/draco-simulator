@@ -1,11 +1,16 @@
 // Settings page
 
 import { useEffect, useState } from 'react';
+import { MapPin, Cloud, Info, Palette, RotateCcw } from 'lucide-react';
 import { useSkyStore } from '../stores/skyStore';
+import { useThemeStore } from '../stores/themeStore';
+import { PanelChrome } from '../components/ui/PanelChrome';
+import { NightVisionToggle } from '../components/ui/NightVisionToggle';
 
 export function Settings() {
   const { location, conditions, updateLocation, updateConditions, fetchLocation, fetchConditions } =
     useSkyStore();
+  const { setSidebarExpanded } = useThemeStore();
 
   const [locationForm, setLocationForm] = useState({
     latitude: 0,
@@ -64,201 +69,201 @@ export function Settings() {
     await updateConditions(conditionsForm);
   };
 
+  const handleResetLayout = () => {
+    // Clear all panel layout saved state
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith('react-resizable-panels:'));
+    keys.forEach((k) => localStorage.removeItem(k));
+    setSidebarExpanded(false);
+    window.location.reload();
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
+    <div className="max-w-4xl mx-auto space-y-4">
+      <h1 className="text-xl font-bold text-nina-text-bright">Settings</h1>
 
-      <div className="space-y-6">
-        {/* Observer Location */}
-        <section className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Observer Location</h2>
-          <form onSubmit={handleLocationSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Latitude (-90 to 90)</label>
-                <input
-                  type="number"
-                  step="0.0001"
-                  min="-90"
-                  max="90"
-                  value={locationForm.latitude}
-                  onChange={(e) =>
-                    setLocationForm({ ...locationForm, latitude: Number(e.target.value) })
-                  }
-                  className="w-full bg-space-700 border border-space-600 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Longitude (-180 to 180)</label>
-                <input
-                  type="number"
-                  step="0.0001"
-                  min="-180"
-                  max="180"
-                  value={locationForm.longitude}
-                  onChange={(e) =>
-                    setLocationForm({ ...locationForm, longitude: Number(e.target.value) })
-                  }
-                  className="w-full bg-space-700 border border-space-600 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Elevation (meters)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={locationForm.elevation}
-                  onChange={(e) =>
-                    setLocationForm({ ...locationForm, elevation: Number(e.target.value) })
-                  }
-                  className="w-full bg-space-700 border border-space-600 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Location Name</label>
-                <input
-                  type="text"
-                  value={locationForm.name}
-                  onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
-                  placeholder="e.g., Backyard Observatory"
-                  className="w-full bg-space-700 border border-space-600 rounded-lg px-3 py-2 text-white"
-                />
-              </div>
+      {/* Theme & Layout */}
+      <PanelChrome title="Appearance" icon={<Palette size={12} />}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-nina-text-bright">Night Vision Mode</div>
+              <div className="text-xs text-nina-text-dim">Switches all UI to red/black for dark adaptation</div>
             </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-nebula-purple rounded-lg font-medium hover:bg-opacity-80 transition"
-            >
-              Update Location
-            </button>
-          </form>
-        </section>
-
-        {/* Sky Conditions */}
-        <section className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Sky Conditions (Simulation)</h2>
-          <form onSubmit={handleConditionsSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Seeing (arcsec): {conditionsForm.seeing.toFixed(1)}
-                </label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="5"
-                  step="0.1"
-                  value={conditionsForm.seeing}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, seeing: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Transparency: {Math.round(conditionsForm.transparency * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={conditionsForm.transparency}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, transparency: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Cloud Cover: {Math.round(conditionsForm.cloud_cover * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={conditionsForm.cloud_cover}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, cloud_cover: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Bortle Class: {conditionsForm.bortle_class}
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="9"
-                  step="1"
-                  value={conditionsForm.bortle_class}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, bortle_class: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Temperature: {conditionsForm.temperature}°C
-                </label>
-                <input
-                  type="range"
-                  min="-20"
-                  max="40"
-                  step="1"
-                  value={conditionsForm.temperature}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, temperature: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Humidity: {conditionsForm.humidity}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={conditionsForm.humidity}
-                  onChange={(e) =>
-                    setConditionsForm({ ...conditionsForm, humidity: Number(e.target.value) })
-                  }
-                  className="w-full"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-nebula-purple rounded-lg font-medium hover:bg-opacity-80 transition"
-            >
-              Update Conditions
-            </button>
-          </form>
-        </section>
-
-        {/* Application Info */}
-        <section className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">About</h2>
-          <div className="space-y-2 text-sm text-gray-400">
-            <p>
-              <span className="text-gray-300">Draco Astrophotography Simulator</span>
-            </p>
-            <p>Learn astrophotography through realistic simulation.</p>
-            <p className="mt-4">
-              Built with Go backend, React frontend, and real astronomical data.
-            </p>
+            <NightVisionToggle />
           </div>
-        </section>
-      </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-nina-text-bright">Reset Layout</div>
+              <div className="text-xs text-nina-text-dim">Reset all panel sizes and sidebar state</div>
+            </div>
+            <button
+              onClick={handleResetLayout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-nina-elevated text-nina-text-dim rounded text-sm hover:text-nina-text hover:bg-nina-surface transition"
+            >
+              <RotateCcw size={14} /> Reset
+            </button>
+          </div>
+        </div>
+      </PanelChrome>
+
+      {/* Observer Location */}
+      <PanelChrome title="Observer Location" icon={<MapPin size={12} />}>
+        <form onSubmit={handleLocationSubmit} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-nina-text-dim mb-1">Latitude (-90 to 90)</label>
+              <input
+                type="number"
+                step="0.0001"
+                min="-90"
+                max="90"
+                value={locationForm.latitude}
+                onChange={(e) => setLocationForm({ ...locationForm, latitude: Number(e.target.value) })}
+                className="w-full bg-nina-bg border border-nina-border rounded px-2 py-1.5 text-sm text-nina-text"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-nina-text-dim mb-1">Longitude (-180 to 180)</label>
+              <input
+                type="number"
+                step="0.0001"
+                min="-180"
+                max="180"
+                value={locationForm.longitude}
+                onChange={(e) => setLocationForm({ ...locationForm, longitude: Number(e.target.value) })}
+                className="w-full bg-nina-bg border border-nina-border rounded px-2 py-1.5 text-sm text-nina-text"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-nina-text-dim mb-1">Elevation (meters)</label>
+              <input
+                type="number"
+                step="1"
+                value={locationForm.elevation}
+                onChange={(e) => setLocationForm({ ...locationForm, elevation: Number(e.target.value) })}
+                className="w-full bg-nina-bg border border-nina-border rounded px-2 py-1.5 text-sm text-nina-text"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-nina-text-dim mb-1">Location Name</label>
+              <input
+                type="text"
+                value={locationForm.name}
+                onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })}
+                placeholder="e.g., Backyard Observatory"
+                className="w-full bg-nina-bg border border-nina-border rounded px-2 py-1.5 text-sm text-nina-text"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-1.5 bg-nina-primary rounded text-sm font-medium text-nina-text-bright hover:bg-nina-active transition"
+          >
+            Update Location
+          </button>
+        </form>
+      </PanelChrome>
+
+      {/* Sky Conditions */}
+      <PanelChrome title="Sky Conditions (Simulation)" icon={<Cloud size={12} />}>
+        <form onSubmit={handleConditionsSubmit} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <SliderField
+              label={`Seeing: ${conditionsForm.seeing.toFixed(1)}"`}
+              min={0.5}
+              max={5}
+              step={0.1}
+              value={conditionsForm.seeing}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, seeing: v })}
+            />
+            <SliderField
+              label={`Transparency: ${Math.round(conditionsForm.transparency * 100)}%`}
+              min={0}
+              max={1}
+              step={0.05}
+              value={conditionsForm.transparency}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, transparency: v })}
+            />
+            <SliderField
+              label={`Cloud Cover: ${Math.round(conditionsForm.cloud_cover * 100)}%`}
+              min={0}
+              max={1}
+              step={0.05}
+              value={conditionsForm.cloud_cover}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, cloud_cover: v })}
+            />
+            <SliderField
+              label={`Bortle Class: ${conditionsForm.bortle_class}`}
+              min={1}
+              max={9}
+              step={1}
+              value={conditionsForm.bortle_class}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, bortle_class: v })}
+            />
+            <SliderField
+              label={`Temperature: ${conditionsForm.temperature}°C`}
+              min={-20}
+              max={40}
+              step={1}
+              value={conditionsForm.temperature}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, temperature: v })}
+            />
+            <SliderField
+              label={`Humidity: ${conditionsForm.humidity}%`}
+              min={0}
+              max={100}
+              step={5}
+              value={conditionsForm.humidity}
+              onChange={(v) => setConditionsForm({ ...conditionsForm, humidity: v })}
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-1.5 bg-nina-primary rounded text-sm font-medium text-nina-text-bright hover:bg-nina-active transition"
+          >
+            Update Conditions
+          </button>
+        </form>
+      </PanelChrome>
+
+      {/* About */}
+      <PanelChrome title="About" icon={<Info size={12} />}>
+        <div className="space-y-1.5 text-xs text-nina-text-dim">
+          <p><span className="text-nina-text">Draco Astrophotography Simulator</span></p>
+          <p>Learn astrophotography through realistic simulation.</p>
+          <p className="mt-2">Built with Go backend, React frontend, and real astronomical data.</p>
+        </div>
+      </PanelChrome>
+    </div>
+  );
+}
+
+function SliderField({
+  label,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+}: {
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-nina-text-dim mb-1">{label}</label>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
     </div>
   );
 }

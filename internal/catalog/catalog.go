@@ -174,6 +174,12 @@ type DeepSkyObject struct {
 
 	// MinExposure is the recommended minimum total exposure in seconds
 	MinExposure float64 `json:"min_exposure,omitempty"`
+
+	// ImageURL is the path to the DSO image relative to the web root
+	ImageURL string `json:"image_url,omitempty"`
+
+	// ImageCredit is the attribution line for the image source
+	ImageCredit string `json:"image_credit,omitempty"`
 }
 
 // ApparentArea returns the apparent area in square arcminutes

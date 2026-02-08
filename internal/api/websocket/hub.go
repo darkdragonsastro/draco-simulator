@@ -291,4 +291,9 @@ const (
 	EventGuideStarted = "guide.started"
 	EventGuideStopped = "guide.stopped"
 	EventGuideCorrection = "guide.correction"
+
+	EventMountPosition        = "mount.position"
+	EventMountSlewStarted     = "mount.slew.started"
+	EventMountSlewCompleted   = "mount.slew.completed"
+	EventMountTrackingChanged = "mount.tracking.changed"
 )

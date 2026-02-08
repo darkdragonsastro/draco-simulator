@@ -1,18 +1,32 @@
 @import "tailwindcss";
 
-/* Custom color theme for astrophotography */
+/* NINA-inspired color theme for astrophotography */
 @theme {
-  --color-space-900: #0a0a0f;
-  --color-space-800: #12121a;
-  --color-space-700: #1a1a25;
-  --color-space-600: #252535;
-  --color-space-500: #35354a;
+  /* NINA "Persian Faint" inspired tokens */
+  --color-nina-bg: #263238;
+  --color-nina-surface: #2A2C31;
+  --color-nina-elevated: #2E3338;
+  --color-nina-border: #37474F;
+  --color-nina-primary: #007063;
+  --color-nina-active: #00BCA6;
+  --color-nina-text: #BDC3C7;
+  --color-nina-text-dim: #78909C;
+  --color-nina-text-bright: #ECEFF1;
 
+  /* Legacy space tokens mapped to NINA equivalents */
+  --color-space-900: #263238;
+  --color-space-800: #2A2C31;
+  --color-space-700: #2E3338;
+  --color-space-600: #37474F;
+  --color-space-500: #455A64;
+
+  /* Gamification accents */
   --color-star-gold: #ffd700;
   --color-nebula-red: #ff6b6b;
   --color-nebula-blue: #4dabf7;
   --color-nebula-purple: #9775fa;
 
+  /* Status colors */
   --color-success: #51cf66;
   --color-warning: #fcc419;
   --color-error: #ff6b6b;
@@ -21,7 +35,7 @@
 
 /* Base styles */
 body {
-  @apply bg-space-900 text-gray-100 antialiased;
+  @apply bg-nina-bg text-nina-text antialiased;
   min-height: 100vh;
   margin: 0;
 }
@@ -30,4 +44,117 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-nina-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-nina-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-space-500);
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type="range"]::-webkit-slider-track {
+  height: 4px;
+  background: var(--color-nina-border);
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-nina-active);
+  margin-top: -5px;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--color-nina-border);
+  border-radius: 2px;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-nina-active);
+  border: none;
+}
+
+/* Night vision mode */
+.night-vision {
+  filter: none;
+}
+
+.night-vision body,
+.night-vision #root {
+  background-color: #0a0000 !important;
+}
+
+.night-vision * {
+  --color-nina-bg: #0a0000 !important;
+  --color-nina-surface: #120000 !important;
+  --color-nina-elevated: #1a0000 !important;
+  --color-nina-border: #330000 !important;
+  --color-nina-primary: #660000 !important;
+  --color-nina-active: #cc0000 !important;
+  --color-nina-text: #880000 !important;
+  --color-nina-text-dim: #550000 !important;
+  --color-nina-text-bright: #cc0000 !important;
+  --color-space-900: #0a0000 !important;
+  --color-space-800: #120000 !important;
+  --color-space-700: #1a0000 !important;
+  --color-space-600: #330000 !important;
+  --color-space-500: #440000 !important;
+  --color-star-gold: #cc0000 !important;
+  --color-nebula-red: #990000 !important;
+  --color-nebula-blue: #880000 !important;
+  --color-nebula-purple: #770000 !important;
+  --color-success: #880000 !important;
+  --color-warning: #990000 !important;
+  --color-error: #cc0000 !important;
+  --color-info: #880000 !important;
+  color: #880000 !important;
+  border-color: #330000 !important;
+}
+
+.night-vision canvas {
+  filter: grayscale(1) sepia(1) hue-rotate(-30deg) saturate(3) brightness(0.4);
+}
+
+/* Resize handle */
+.resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms;
+}
+
+.resize-handle:hover,
+.resize-handle[data-resize-handle-active] {
+  background-color: var(--color-nina-active);
 }

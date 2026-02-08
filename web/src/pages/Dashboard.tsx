@@ -2,9 +2,23 @@
 
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  TrendingUp,
+  Cloud,
+  Zap,
+  Camera,
+  Target,
+  ShoppingCart,
+  Moon,
+  Sun,
+  Telescope,
+  Star,
+} from 'lucide-react';
 import { useGameStore } from '../stores/gameStore';
 import { useSkyStore } from '../stores/skyStore';
-import { SkyMap } from '../components/SkyMap';
+import { useDSOImageStore } from '../stores/dsoImageStore';
+import { Planetarium } from '../components/planetarium/Planetarium';
+import { PanelChrome } from '../components/ui/PanelChrome';
 
 export function Dashboard() {
   const { progress, availableChallenges, fetchProgress, fetchChallenges } = useGameStore();
@@ -20,111 +34,87 @@ export function Dashboard() {
     selectTarget,
   } = useSkyStore();
 
+  const dsoImageStore = useDSOImageStore();
+
   useEffect(() => {
     fetchProgress();
     fetchChallenges();
     fetchAllSkyData();
+    dsoImageStore.fetchManifest();
   }, [fetchProgress, fetchChallenges, fetchAllSkyData]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-space-700 to-space-800 rounded-xl p-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome to Draco Simulator</h1>
-        <p className="text-gray-300">
+      <div className="bg-gradient-to-r from-nina-elevated to-nina-surface rounded border border-nina-border p-5">
+        <h1 className="text-2xl font-bold text-nina-text-bright mb-1">Welcome to Draco Simulator</h1>
+        <p className="text-nina-text-dim text-sm">
           Learn astrophotography through realistic simulation, then transition to real equipment.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Player Progress Card */}
-        <div className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <span>📈</span> Your Progress
-          </h2>
+        <PanelChrome title="Your Progress" icon={<TrendingUp size={12} />}>
           {progress ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-400">Level {progress.level}</span>
-                  <span className="text-gray-400">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-nina-text-dim">Level {progress.level}</span>
+                  <span className="text-nina-text-dim">
                     {progress.xp} / {progress.xp_to_next_level} XP
                   </span>
                 </div>
-                <div className="h-3 bg-space-600 rounded-full overflow-hidden">
+                <div className="h-2 bg-nina-border rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-nebula-blue to-nebula-purple"
+                    className="h-full bg-nina-active transition-all"
                     style={{ width: `${(progress.xp / progress.xp_to_next_level) * 100}%` }}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-space-700 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-star-gold">
-                    {progress.total_images}
-                  </div>
-                  <div className="text-xs text-gray-400">Images Captured</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-nina-elevated rounded p-2.5 text-center">
+                  <div className="text-xl font-bold text-star-gold">{progress.total_images}</div>
+                  <div className="text-[10px] text-nina-text-dim">Images Captured</div>
                 </div>
-                <div className="bg-space-700 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-nebula-blue">
+                <div className="bg-nina-elevated rounded p-2.5 text-center">
+                  <div className="text-xl font-bold text-nina-active">
                     {Math.round(progress.total_exposure_time / 60)}m
                   </div>
-                  <div className="text-xs text-gray-400">Total Exposure</div>
+                  <div className="text-[10px] text-nina-text-dim">Total Exposure</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Achievements</span>
-                <span className="text-white">
-                  {progress.unlocked_achievements.length} unlocked (
-                  {Math.round(progress.achievement_progress * 100)}%)
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-nina-text-dim">Achievements</span>
+                <span className="text-nina-text">
+                  {progress.unlocked_achievements.length} ({Math.round(progress.achievement_progress * 100)}%)
                 </span>
               </div>
             </div>
           ) : (
-            <div className="text-gray-400">Loading...</div>
+            <div className="text-nina-text-dim text-sm">Loading...</div>
           )}
-        </div>
+        </PanelChrome>
 
         {/* Sky Conditions Card */}
-        <div className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <span>🌙</span> Current Sky
-          </h2>
+        <PanelChrome title="Current Sky" icon={<Cloud size={12} />}>
           {conditions && twilight ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-space-700 rounded-lg p-3">
-                  <div className="text-sm text-gray-400">Seeing</div>
-                  <div className="text-lg font-medium text-white">
-                    {conditions.seeing.toFixed(1)}"
-                  </div>
-                </div>
-                <div className="bg-space-700 rounded-lg p-3">
-                  <div className="text-sm text-gray-400">Transparency</div>
-                  <div className="text-lg font-medium text-white">
-                    {Math.round(conditions.transparency * 100)}%
-                  </div>
-                </div>
-                <div className="bg-space-700 rounded-lg p-3">
-                  <div className="text-sm text-gray-400">Cloud Cover</div>
-                  <div className="text-lg font-medium text-white">
-                    {Math.round(conditions.cloud_cover * 100)}%
-                  </div>
-                </div>
-                <div className="bg-space-700 rounded-lg p-3">
-                  <div className="text-sm text-gray-400">Bortle Class</div>
-                  <div className="text-lg font-medium text-white">{conditions.bortle_class}</div>
-                </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <ConditionBox label="Seeing" value={`${conditions.seeing.toFixed(1)}"`} />
+                <ConditionBox label="Transparency" value={`${Math.round(conditions.transparency * 100)}%`} />
+                <ConditionBox label="Cloud Cover" value={`${Math.round(conditions.cloud_cover * 100)}%`} />
+                <ConditionBox label="Bortle" value={String(conditions.bortle_class)} />
               </div>
 
               <div
-                className={`flex items-center gap-2 p-3 rounded-lg ${
-                  twilight.is_dark ? 'bg-green-900/30 text-success' : 'bg-yellow-900/30 text-warning'
+                className={`flex items-center gap-2 p-2 rounded text-xs ${
+                  twilight.is_dark ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
                 }`}
               >
-                <span>{twilight.is_dark ? '🌙' : '☀️'}</span>
+                {twilight.is_dark ? <Moon size={12} /> : <Sun size={12} />}
                 <span>
                   {twilight.is_dark
                     ? `Dark for ${twilight.dark_hours_remaining.toFixed(1)} more hours`
@@ -133,9 +123,9 @@ export function Dashboard() {
               </div>
 
               {moon && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Moon</span>
-                  <span className="text-white">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-nina-text-dim">Moon</span>
+                  <span className="text-nina-text">
                     {moon.phase_name} ({Math.round(moon.illumination)}%)
                     {moon.is_up ? ' - Up' : ' - Down'}
                   </span>
@@ -143,60 +133,30 @@ export function Dashboard() {
               )}
             </div>
           ) : (
-            <div className="text-gray-400">Loading...</div>
+            <div className="text-nina-text-dim text-sm">Loading...</div>
           )}
-        </div>
+        </PanelChrome>
 
         {/* Quick Actions Card */}
-        <div className="bg-space-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <span>🚀</span> Quick Actions
-          </h2>
-          <div className="space-y-3">
-            <Link
-              to="/imaging"
-              className="flex items-center gap-3 p-3 bg-space-700 rounded-lg hover:bg-space-600 transition"
-            >
-              <span className="text-2xl">📷</span>
-              <div>
-                <div className="font-medium text-white">Start Imaging</div>
-                <div className="text-sm text-gray-400">Open the imaging interface</div>
-              </div>
-            </Link>
-            <Link
+        <PanelChrome title="Quick Actions" icon={<Zap size={12} />}>
+          <div className="space-y-2">
+            <QuickAction icon={Camera} label="Start Imaging" desc="Open the imaging interface" to="/imaging" />
+            <QuickAction
+              icon={Target}
+              label="View Challenges"
+              desc={`${availableChallenges.length} challenges available`}
               to="/challenges"
-              className="flex items-center gap-3 p-3 bg-space-700 rounded-lg hover:bg-space-600 transition"
-            >
-              <span className="text-2xl">🎯</span>
-              <div>
-                <div className="font-medium text-white">View Challenges</div>
-                <div className="text-sm text-gray-400">
-                  {availableChallenges.length} challenges available
-                </div>
-              </div>
-            </Link>
-            <Link
-              to="/store"
-              className="flex items-center gap-3 p-3 bg-space-700 rounded-lg hover:bg-space-600 transition"
-            >
-              <span className="text-2xl">🛒</span>
-              <div>
-                <div className="font-medium text-white">Equipment Store</div>
-                <div className="text-sm text-gray-400">Upgrade your gear</div>
-              </div>
-            </Link>
+            />
+            <QuickAction icon={ShoppingCart} label="Equipment Store" desc="Upgrade your gear" to="/store" />
           </div>
-        </div>
+        </PanelChrome>
       </div>
 
       {/* Sky Map */}
-      <div className="bg-space-800 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <span>🌌</span> Sky View
-        </h2>
-        <div className="flex flex-col lg:flex-row gap-6">
+      <PanelChrome title="Sky View" icon={<Telescope size={12} />}>
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1">
-            <SkyMap
+            <Planetarium
               visibleObjects={visibleObjects}
               moon={moon}
               sun={sun}
@@ -207,94 +167,157 @@ export function Dashboard() {
             />
           </div>
           {selectedTarget && (
-            <div className="lg:w-64 bg-space-700 rounded-lg p-4">
-              <h3 className="font-semibold text-white mb-2">
+            <div className="lg:w-56 bg-nina-elevated rounded p-3 border border-nina-border">
+              {(() => {
+                const manifestEntry = dsoImageStore.getImageData(selectedTarget.object.id);
+                const thumbUrl = manifestEntry?.thumbUrl
+                  ?? (selectedTarget.object.image_url
+                    ? selectedTarget.object.image_url.replace('.jpg', '-thumb.jpg')
+                    : undefined);
+                const credit = manifestEntry?.credit ?? selectedTarget.object.image_credit;
+                return thumbUrl ? (
+                  <div className="mb-2">
+                    <img
+                      src={thumbUrl}
+                      alt={selectedTarget.object.name || selectedTarget.object.id}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    {credit && (
+                      <div className="text-[8px] text-nina-text-dim mt-0.5 text-right">
+                        Image: {credit}
+                      </div>
+                    )}
+                  </div>
+                ) : null;
+              })()}
+              <h3 className="font-medium text-nina-text-bright text-sm mb-2">
                 {selectedTarget.object.name || selectedTarget.object.id}
               </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Type</span>
-                  <span className="text-white capitalize">{selectedTarget.object.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Magnitude</span>
-                  <span className="text-white">{selectedTarget.object.vmag.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Altitude</span>
-                  <span className="text-white">{selectedTarget.visibility.coords.altitude.toFixed(1)}°</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Azimuth</span>
-                  <span className="text-white">{selectedTarget.visibility.coords.azimuth.toFixed(1)}°</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Airmass</span>
-                  <span className="text-white">{selectedTarget.visibility.airmass.toFixed(2)}</span>
-                </div>
+              <div className="space-y-1.5 text-xs">
+                <InfoRow label="Type" value={selectedTarget.object.type} />
+                <InfoRow label="Magnitude" value={selectedTarget.object.vmag.toFixed(1)} />
+                <InfoRow label="Altitude" value={`${selectedTarget.visibility.coords.altitude.toFixed(1)}°`} />
+                <InfoRow label="Azimuth" value={`${selectedTarget.visibility.coords.azimuth.toFixed(1)}°`} />
+                <InfoRow label="Airmass" value={selectedTarget.visibility.airmass.toFixed(2)} />
                 {selectedTarget.object.size_major > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Size</span>
-                    <span className="text-white">
-                      {selectedTarget.object.size_major.toFixed(1)}' x {selectedTarget.object.size_minor.toFixed(1)}'
-                    </span>
-                  </div>
+                  <InfoRow
+                    label="Size"
+                    value={`${selectedTarget.object.size_major.toFixed(1)}' x ${selectedTarget.object.size_minor.toFixed(1)}'`}
+                  />
                 )}
               </div>
               <Link
                 to="/imaging"
-                className="mt-4 block w-full py-2 bg-nebula-blue rounded-lg text-center text-sm font-medium hover:bg-opacity-80 transition"
+                className="mt-3 block w-full py-1.5 bg-nina-primary rounded text-center text-xs font-medium text-nina-text-bright hover:bg-nina-active transition"
               >
                 Image This Target
               </Link>
             </div>
           )}
           {!selectedTarget && visibleObjects.length > 0 && (
-            <div className="lg:w-64 bg-space-700 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">
+            <div className="lg:w-56 bg-nina-elevated rounded p-3 border border-nina-border">
+              <p className="text-nina-text-dim text-xs">
                 Click on an object in the sky map to see details and start imaging.
               </p>
-              <div className="mt-4 text-sm text-gray-500">
+              <div className="mt-2 text-xs text-nina-text-dim">
                 {visibleObjects.length} objects currently visible
               </div>
             </div>
           )}
         </div>
-      </div>
+      </PanelChrome>
 
       {/* Suggested Targets */}
-      <div className="bg-space-800 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <span>🎯</span> Suggested Targets Tonight
-        </h2>
+      <PanelChrome title="Suggested Targets Tonight" icon={<Star size={12} />}>
         {suggestedTargets.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {suggestedTargets.slice(0, 6).map((suggestion) => (
               <div
                 key={suggestion.object.id}
-                className="bg-space-700 rounded-lg p-4 hover:bg-space-600 transition cursor-pointer"
+                className="bg-nina-elevated rounded overflow-hidden hover:bg-nina-border/50 transition cursor-pointer border border-nina-border"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-white">{suggestion.object.name || suggestion.object.id}</h3>
-                  <span className="text-xs px-2 py-1 rounded bg-space-500">
-                    {suggestion.object.type}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-400 mb-2">
-                  Mag {suggestion.object.vmag.toFixed(1)} | Alt{' '}
-                  {suggestion.visibility.coords.altitude.toFixed(0)}°
-                </div>
-                <div className="text-xs text-nebula-blue">{suggestion.reason}</div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Score: {suggestion.score.toFixed(0)} | Window: {suggestion.window_hours.toFixed(1)}h
+                {(() => {
+                  const entry = dsoImageStore.getImageData(suggestion.object.id);
+                  const thumbSrc = entry?.thumbUrl
+                    ?? (suggestion.object.image_url
+                      ? suggestion.object.image_url.replace('.jpg', '-thumb.jpg')
+                      : undefined);
+                  return thumbSrc ? (
+                    <img
+                      src={thumbSrc}
+                      alt={suggestion.object.name || suggestion.object.id}
+                      className="w-full h-20 object-cover"
+                    />
+                  ) : null;
+                })()}
+                <div className="p-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-medium text-nina-text-bright text-sm">
+                      {suggestion.object.name || suggestion.object.id}
+                    </h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-nina-surface text-nina-text-dim">
+                      {suggestion.object.type}
+                    </span>
+                  </div>
+                  <div className="text-xs text-nina-text-dim mb-1">
+                    Mag {suggestion.object.vmag.toFixed(1)} | Alt{' '}
+                    {suggestion.visibility.coords.altitude.toFixed(0)}°
+                  </div>
+                  <div className="text-[10px] text-nina-active">{suggestion.reason}</div>
+                  <div className="mt-1 text-[10px] text-nina-text-dim">
+                    Score: {suggestion.score.toFixed(0)} | Window: {suggestion.window_hours.toFixed(1)}h
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-gray-400">Loading suggested targets...</div>
+          <div className="text-nina-text-dim text-sm">Loading suggested targets...</div>
         )}
-      </div>
+      </PanelChrome>
     </div>
+  );
+}
+
+function ConditionBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-nina-elevated rounded p-2">
+      <div className="text-[10px] text-nina-text-dim">{label}</div>
+      <div className="text-sm font-medium text-nina-text-bright">{value}</div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-nina-text-dim">{label}</span>
+      <span className="text-nina-text capitalize">{value}</span>
+    </div>
+  );
+}
+
+function QuickAction({
+  icon: Icon,
+  label,
+  desc,
+  to,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  desc: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-2.5 p-2.5 bg-nina-elevated rounded hover:bg-nina-border/50 transition border border-nina-border"
+    >
+      <Icon size={18} className="text-nina-active shrink-0" />
+      <div>
+        <div className="text-sm font-medium text-nina-text-bright">{label}</div>
+        <div className="text-[10px] text-nina-text-dim">{desc}</div>
+      </div>
+    </Link>
   );
 }

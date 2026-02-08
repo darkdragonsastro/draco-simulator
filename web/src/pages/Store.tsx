@@ -1,7 +1,9 @@
 // Equipment Store page
 
 import { useEffect, useState } from 'react';
+import { ShoppingCart, Coins } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore';
+import { PanelChrome } from '../components/ui/PanelChrome';
 
 export function Store() {
   const { store, ownedEquipment, fetchStore, purchaseEquipment, progress } = useGameStore();
@@ -29,60 +31,50 @@ export function Store() {
 
   const getTierColor = (tier: string) => {
     switch (tier.toLowerCase()) {
-      case 'starter':
-        return 'border-gray-500';
-      case 'mid_range':
-        return 'border-nebula-blue';
-      case 'professional':
-        return 'border-nebula-purple';
-      case 'premium':
-        return 'border-star-gold';
-      default:
-        return 'border-gray-600';
+      case 'starter': return 'border-nina-border';
+      case 'mid_range': return 'border-nebula-blue';
+      case 'professional': return 'border-nebula-purple';
+      case 'premium': return 'border-star-gold';
+      default: return 'border-nina-border';
     }
   };
 
   const getTierBadgeColor = (tier: string) => {
     switch (tier.toLowerCase()) {
-      case 'starter':
-        return 'bg-gray-600';
-      case 'mid_range':
-        return 'bg-nebula-blue/20 text-nebula-blue';
-      case 'professional':
-        return 'bg-nebula-purple/20 text-nebula-purple';
-      case 'premium':
-        return 'bg-star-gold/20 text-star-gold';
-      default:
-        return 'bg-gray-600';
+      case 'starter': return 'bg-nina-border text-nina-text-dim';
+      case 'mid_range': return 'bg-nebula-blue/20 text-nebula-blue';
+      case 'professional': return 'bg-nebula-purple/20 text-nebula-purple';
+      case 'premium': return 'bg-star-gold/20 text-star-gold';
+      default: return 'bg-nina-border text-nina-text-dim';
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-6xl mx-auto space-y-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Equipment Store</h1>
-          <p className="text-gray-400">Upgrade your gear to improve image quality</p>
+          <h1 className="text-xl font-bold text-nina-text-bright">Equipment Store</h1>
+          <p className="text-xs text-nina-text-dim">Upgrade your gear to improve image quality</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-space-800 rounded-lg">
-          <span className="text-star-gold">💰</span>
-          <span className="text-xl font-bold text-white">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-nina-surface rounded border border-nina-border">
+          <Coins size={14} className="text-star-gold" />
+          <span className="text-lg font-bold text-nina-text-bright">
             {(progress?.credits ?? 0).toLocaleString()}
           </span>
-          <span className="text-sm text-gray-400">credits</span>
+          <span className="text-xs text-nina-text-dim">credits</span>
         </div>
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap transition ${
               selectedCategory === cat
-                ? 'bg-nebula-purple text-white'
-                : 'bg-space-700 text-gray-400 hover:bg-space-600'
+                ? 'bg-nina-primary text-nina-text-bright'
+                : 'bg-nina-elevated text-nina-text-dim hover:bg-nina-surface hover:text-nina-text'
             }`}
           >
             {cat === 'all' ? 'All Equipment' : cat.replace('_', ' ')}
@@ -91,7 +83,7 @@ export function Store() {
       </div>
 
       {/* Equipment Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredEquipment?.map((item) => {
           const owned = isOwned(item.id);
           const affordable = canAfford(item.price);
@@ -99,40 +91,35 @@ export function Store() {
           return (
             <div
               key={item.id}
-              className={`bg-space-800 rounded-xl p-5 border-2 ${getTierColor(item.tier)} ${
-                owned ? 'opacity-60' : ''
+              className={`bg-nina-surface rounded p-4 border-2 ${getTierColor(item.tier)} ${
+                owned ? 'opacity-50' : ''
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-semibold text-white">{item.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded capitalize ${getTierBadgeColor(item.tier)}`}
-                    >
+                  <h3 className="font-medium text-nina-text-bright text-sm">{item.name}</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${getTierBadgeColor(item.tier)}`}>
                       {item.tier.replace('_', ' ')}
                     </span>
-                    <span className="text-xs text-gray-500 capitalize">
-                      {item.type.replace('_', ' ')}
-                    </span>
+                    <span className="text-[10px] text-nina-text-dim capitalize">{item.type.replace('_', ' ')}</span>
                   </div>
                 </div>
                 {owned && (
-                  <span className="text-xs px-2 py-1 bg-success/20 text-success rounded">Owned</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-success/20 text-success rounded">Owned</span>
                 )}
               </div>
 
-              <p className="text-sm text-gray-400 mb-4">{item.description}</p>
+              <p className="text-xs text-nina-text-dim mb-3">{item.description}</p>
 
-              {/* Specs */}
               {item.specs && Object.keys(item.specs).length > 0 && (
-                <div className="mb-4 p-3 bg-space-700 rounded-lg">
-                  <div className="text-xs text-gray-500 mb-2">Specifications</div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="mb-3 p-2 bg-nina-elevated rounded">
+                  <div className="text-[10px] text-nina-text-dim mb-1">Specifications</div>
+                  <div className="grid grid-cols-2 gap-1 text-[10px]">
                     {Object.entries(item.specs).slice(0, 4).map(([key, value]) => (
                       <div key={key}>
-                        <span className="text-gray-400">{key.replace('_', ' ')}: </span>
-                        <span className="text-white">{String(value)}</span>
+                        <span className="text-nina-text-dim">{key.replace('_', ' ')}: </span>
+                        <span className="text-nina-text">{String(value)}</span>
                       </div>
                     ))}
                   </div>
@@ -141,8 +128,8 @@ export function Store() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <span className="text-star-gold">💰</span>
-                  <span className={`font-bold ${affordable ? 'text-white' : 'text-error'}`}>
+                  <Coins size={12} className="text-star-gold" />
+                  <span className={`font-bold text-sm ${affordable ? 'text-nina-text-bright' : 'text-error'}`}>
                     {item.price.toLocaleString()}
                   </span>
                 </div>
@@ -150,10 +137,10 @@ export function Store() {
                   <button
                     onClick={() => handlePurchase(item.id)}
                     disabled={!affordable || purchasing === item.id}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition ${
                       affordable
-                        ? 'bg-nebula-purple hover:bg-opacity-80'
-                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        ? 'bg-nina-primary text-nina-text-bright hover:bg-nina-active'
+                        : 'bg-nina-border text-nina-text-dim cursor-not-allowed'
                     }`}
                   >
                     {purchasing === item.id ? 'Purchasing...' : affordable ? 'Purchase' : 'Not enough'}
@@ -167,21 +154,16 @@ export function Store() {
 
       {/* Owned Equipment Section */}
       {ownedEquipment.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Your Equipment</h2>
-          <div className="bg-space-800 rounded-xl p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {ownedEquipment.map((item) => (
-                <div key={item.id} className="p-3 bg-space-700 rounded-lg">
-                  <div className="text-sm font-medium text-white">{item.name}</div>
-                  <div className="text-xs text-gray-400 capitalize">
-                    {item.type.replace('_', ' ')}
-                  </div>
-                </div>
-              ))}
-            </div>
+        <PanelChrome title="Your Equipment" icon={<ShoppingCart size={12} />}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {ownedEquipment.map((item) => (
+              <div key={item.id} className="p-2 bg-nina-elevated rounded border border-nina-border">
+                <div className="text-xs font-medium text-nina-text-bright">{item.name}</div>
+                <div className="text-[10px] text-nina-text-dim capitalize">{item.type.replace('_', ' ')}</div>
+              </div>
+            ))}
           </div>
-        </section>
+        </PanelChrome>
       )}
     </div>
   );

@@ -505,6 +505,19 @@ func (h *HipparcosCatalog) AddStarName(name string, hip int) {
 	}
 }
 
+// RefreshBrightStarNames updates the brightStars cache with names from the star map.
+// Call this after AddStarName to ensure the bright star cache has current names.
+func (h *HipparcosCatalog) RefreshBrightStarNames() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for i := range h.brightStars {
+		if star, ok := h.stars[h.brightStars[i].HIP]; ok {
+			h.brightStars[i].Name = star.Name
+		}
+	}
+}
+
 // ExportBinary exports the catalog to compressed binary format
 func (h *HipparcosCatalog) ExportBinary(w io.Writer) error {
 	h.mu.RLock()
